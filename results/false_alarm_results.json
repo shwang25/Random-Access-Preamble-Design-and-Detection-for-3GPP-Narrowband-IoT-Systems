@@ -1,9 +1,7 @@
 {
   "result_kind": "false_alarm",
-  "mode": "waveform",
   "channel_model": "typical_urban",
   "run_config": {
-    "mode": "waveform",
     "channel_model": "typical_urban",
     "m1": 128,
     "m2": 256,
@@ -13,7 +11,6 @@
     {
       "L": 8,
       "snr_db": 14.25,
-      "mode": "waveform",
       "channel_model": "typical_urban",
       "threshold": 15.335274146688624,
       "achieved_pfa": 0.00390625,
@@ -30,7 +27,6 @@
     {
       "L": 32,
       "snr_db": 4.25,
-      "mode": "waveform",
       "channel_model": "typical_urban",
       "threshold": 316.6390622388404,
       "achieved_pfa": 0.0,
@@ -47,7 +43,6 @@
     {
       "L": 128,
       "snr_db": -5.75,
-      "mode": "waveform",
       "channel_model": "typical_urban",
       "threshold": 8362.67014241081,
       "achieved_pfa": 0.0029296875,

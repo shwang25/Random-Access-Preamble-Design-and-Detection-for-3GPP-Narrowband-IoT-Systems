@@ -13,13 +13,12 @@ from config import (
     DEFAULT_SEARCH_M1,
     DEFAULT_SEARCH_M2,
     DEFAULT_SEED,
-    DEFAULT_SIMULATION_MODE,
     PAPER_DOPPLER_HZ,
     PAPER_ITERATIONS_DETECTION,
     PAPER_ITERATIONS_FALSE_ALARM,
     PAPER_NUM_RX,
-    build_search_grid,
     build_run_configuration,
+    build_search_grid,
     derive_parameters,
     make_rng,
     paper_coverage_cases,
@@ -39,7 +38,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--m2", type=int, default=DEFAULT_SEARCH_M2)
     parser.add_argument("--num-rx", type=int, default=PAPER_NUM_RX)
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
-    parser.add_argument("--mode", type=str, default=DEFAULT_SIMULATION_MODE, choices=("waveform", "fast"))
     parser.add_argument("--doppler-hz", type=float, default=PAPER_DOPPLER_HZ)
     parser.add_argument("--channel-model", type=str, default=DEFAULT_PAPER_CHANNEL_MODEL)
     parser.add_argument(
@@ -52,16 +50,8 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=PAPER_ITERATIONS_FALSE_ALARM,
     )
-    parser.add_argument(
-        "--threshold-json",
-        type=str,
-        default=None,
-    )
-    parser.add_argument(
-        "--output",
-        type=str,
-        default=None,
-    )
+    parser.add_argument("--threshold-json", type=str, default=None)
+    parser.add_argument("--output", type=str, default=None)
     return parser.parse_args()
 
 
@@ -73,9 +63,7 @@ def load_thresholds(path: str | Path) -> dict[int, float]:
 
 
 def threshold_file_is_usable(path: Path, args: argparse.Namespace) -> bool:
-    """
-    Check whether an on-disk threshold file is statistically adequate.
-    """
+    """Check whether an on-disk threshold file is statistically adequate."""
     if not path.exists():
         return False
 
@@ -86,7 +74,6 @@ def threshold_file_is_usable(path: Path, args: argparse.Namespace) -> bool:
         return False
 
     expected_run_config = build_run_configuration(
-        mode=args.mode,
         channel_model=args.channel_model,
         m1=args.m1,
         m2=args.m2,
@@ -106,13 +93,9 @@ def threshold_file_is_usable(path: Path, args: argparse.Namespace) -> bool:
 
 
 def resolve_thresholds(args: argparse.Namespace) -> dict[int, float]:
-    """
-    Load thresholds from disk, or calibrate them if the file is absent or stale.
-    """
-    threshold_path = (
-        Path(args.threshold_json)
-        if args.threshold_json is not None
-        else result_path(args.mode, "false_alarm_results.json")
+    """Load thresholds from disk, or calibrate them if the file is absent or stale."""
+    threshold_path = Path(args.threshold_json) if args.threshold_json else result_path(
+        "false_alarm_results.json"
     )
     if threshold_file_is_usable(threshold_path, args):
         return load_thresholds(threshold_path)
@@ -123,7 +106,6 @@ def resolve_thresholds(args: argparse.Namespace) -> dict[int, float]:
     )
     threshold_rng = make_rng(args.seed + 1)
     run_config = build_run_configuration(
-        mode=args.mode,
         channel_model=args.channel_model,
         m1=args.m1,
         m2=args.m2,
@@ -131,7 +113,6 @@ def resolve_thresholds(args: argparse.Namespace) -> dict[int, float]:
     )
     output = {
         "result_kind": "false_alarm",
-        "mode": args.mode,
         "channel_model": args.channel_model,
         "run_config": run_config,
         "cases": [],
@@ -157,7 +138,6 @@ def resolve_thresholds(args: argparse.Namespace) -> dict[int, float]:
             evaluation_trials=args.threshold_evaluation_iterations,
             batch_size=args.batch_size,
             num_rx=args.num_rx,
-            mode=args.mode,
             front_end=front_end,
         )
         thresholds[case.preamble_length] = result["threshold"]
@@ -165,7 +145,6 @@ def resolve_thresholds(args: argparse.Namespace) -> dict[int, float]:
             {
                 "L": case.preamble_length,
                 "snr_db": case.snr_db,
-                "mode": args.mode,
                 "channel_model": args.channel_model,
                 "threshold": result["threshold"],
                 "achieved_pfa": result["achieved_pfa"],
@@ -194,21 +173,16 @@ def main() -> None:
     rng = make_rng(args.seed)
     thresholds = resolve_thresholds(args)
     run_config = build_run_configuration(
-        mode=args.mode,
         channel_model=args.channel_model,
         m1=args.m1,
         m2=args.m2,
         num_rx=args.num_rx,
     )
-    output_path = Path(args.output) if args.output is not None else result_path(
-        args.mode,
-        "toa_cdf_results.npz",
-    )
+    output_path = Path(args.output) if args.output is not None else result_path("toa_cdf_results.npz")
 
     arrays = {}
     summaries = {
         "result_kind": "toa_cdf_summary",
-        "mode": args.mode,
         "channel_model": args.channel_model,
         "run_config": run_config,
         "cases": [],
@@ -235,7 +209,6 @@ def main() -> None:
             num_rx=args.num_rx,
             channel_model=args.channel_model,
             doppler_hz=args.doppler_hz,
-            mode=args.mode,
             front_end=front_end,
             collect_errors=True,
         )
@@ -244,7 +217,6 @@ def main() -> None:
         summary = {
             "L": case.preamble_length,
             "snr_db": case.snr_db,
-            "mode": args.mode,
             "channel_model": args.channel_model,
             "num_detected": int(errors.size),
             "median_abs_error_us": float(np.median(np.abs(errors))) if errors.size else None,
@@ -256,7 +228,6 @@ def main() -> None:
 
         print(
             f"[ToA CDF] L={case.preamble_length:3d} "
-            f"mode={args.mode:8s} "
             f"detected={errors.size:5d} "
             f"median |error|={summary['median_abs_error_us']}"
         )
@@ -265,7 +236,6 @@ def main() -> None:
         json.dumps(
             {
                 "result_kind": "toa_cdf_samples",
-                "mode": args.mode,
                 "channel_model": args.channel_model,
                 "run_config": run_config,
             }

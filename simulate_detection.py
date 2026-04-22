@@ -1,4 +1,4 @@
-"""Run parameter validation, front-end cross-checks, and the detection experiment."""
+"""Run parameter validation and the waveform-domain detection experiment."""
 
 from __future__ import annotations
 
@@ -8,19 +8,18 @@ from pathlib import Path
 
 import numpy as np
 
-from channel import apply_channel_to_waveform, synthesize_received_symbols_batch
+from channel import apply_channel_to_waveform
 from config import (
     DEFAULT_PAPER_CHANNEL_MODEL,
     DEFAULT_SEARCH_M1,
     DEFAULT_SEARCH_M2,
     DEFAULT_SEED,
-    DEFAULT_SIMULATION_MODE,
     PAPER_DOPPLER_HZ,
     PAPER_ITERATIONS_DETECTION,
     PAPER_ITERATIONS_FALSE_ALARM,
     PAPER_NUM_RX,
-    build_search_grid,
     build_run_configuration,
+    build_search_grid,
     derive_parameters,
     make_rng,
     paper_coverage_cases,
@@ -48,7 +47,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--m2", type=int, default=DEFAULT_SEARCH_M2)
     parser.add_argument("--num-rx", type=int, default=PAPER_NUM_RX)
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
-    parser.add_argument("--mode", type=str, default=DEFAULT_SIMULATION_MODE, choices=("waveform", "fast"))
     parser.add_argument("--doppler-hz", type=float, default=PAPER_DOPPLER_HZ)
     parser.add_argument("--channel-model", type=str, default=DEFAULT_PAPER_CHANNEL_MODEL)
     parser.add_argument(
@@ -61,16 +59,8 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=PAPER_ITERATIONS_FALSE_ALARM,
     )
-    parser.add_argument(
-        "--threshold-json",
-        type=str,
-        default=None,
-    )
-    parser.add_argument(
-        "--output",
-        type=str,
-        default=None,
-    )
+    parser.add_argument("--threshold-json", type=str, default=None)
+    parser.add_argument("--output", type=str, default=None)
     return parser.parse_args()
 
 
@@ -82,9 +72,7 @@ def load_thresholds(path: str | Path) -> dict[int, float]:
 
 
 def threshold_file_is_usable(path: Path, args: argparse.Namespace) -> bool:
-    """
-    Check whether an on-disk threshold file is statistically adequate.
-    """
+    """Check whether an on-disk threshold file is statistically adequate."""
     if not path.exists():
         return False
 
@@ -95,7 +83,6 @@ def threshold_file_is_usable(path: Path, args: argparse.Namespace) -> bool:
         return False
 
     expected_run_config = build_run_configuration(
-        mode=args.mode,
         channel_model=args.channel_model,
         m1=args.m1,
         m2=args.m2,
@@ -115,13 +102,9 @@ def threshold_file_is_usable(path: Path, args: argparse.Namespace) -> bool:
 
 
 def resolve_thresholds(args: argparse.Namespace) -> dict[int, float]:
-    """
-    Load thresholds from disk, or calibrate them if the file is absent or stale.
-    """
-    threshold_path = (
-        Path(args.threshold_json)
-        if args.threshold_json is not None
-        else result_path(args.mode, "false_alarm_results.json")
+    """Load thresholds from disk, or calibrate them if the file is absent or stale."""
+    threshold_path = Path(args.threshold_json) if args.threshold_json else result_path(
+        "false_alarm_results.json"
     )
     if threshold_file_is_usable(threshold_path, args):
         return load_thresholds(threshold_path)
@@ -132,7 +115,6 @@ def resolve_thresholds(args: argparse.Namespace) -> dict[int, float]:
     )
     threshold_rng = make_rng(args.seed + 1)
     run_config = build_run_configuration(
-        mode=args.mode,
         channel_model=args.channel_model,
         m1=args.m1,
         m2=args.m2,
@@ -140,7 +122,6 @@ def resolve_thresholds(args: argparse.Namespace) -> dict[int, float]:
     )
     output = {
         "result_kind": "false_alarm",
-        "mode": args.mode,
         "channel_model": args.channel_model,
         "run_config": run_config,
         "cases": [],
@@ -166,7 +147,6 @@ def resolve_thresholds(args: argparse.Namespace) -> dict[int, float]:
             evaluation_trials=args.threshold_evaluation_iterations,
             batch_size=args.batch_size,
             num_rx=args.num_rx,
-            mode=args.mode,
             front_end=front_end,
         )
         thresholds[case.preamble_length] = result["threshold"]
@@ -174,7 +154,6 @@ def resolve_thresholds(args: argparse.Namespace) -> dict[int, float]:
             {
                 "L": case.preamble_length,
                 "snr_db": case.snr_db,
-                "mode": args.mode,
                 "channel_model": args.channel_model,
                 "threshold": result["threshold"],
                 "achieved_pfa": result["achieved_pfa"],
@@ -203,11 +182,8 @@ def run_validation_suite(
     reference,
     front_end,
     rng,
-    snr_db: float,
 ) -> dict:
-    """
-    Execute the requested validation steps on a deterministic controlled case.
-    """
+    """Execute validation steps on a deterministic controlled waveform case."""
     validation = {}
 
     validation["step1_parameter_derivation"] = parameter_summary(params)
@@ -250,26 +226,9 @@ def run_validation_suite(
         front_end=front_end,
         hop_sequence=reference.hop_sequence,
     )
-    fast_realization = synthesize_received_symbols_batch(
-        params=params,
-        hop_sequence=reference.hop_sequence,
-        toa_samples=np.array([waveform_realization.true_delay_samples]),
-        cfo_hz=np.array([validation_cfo]),
-        drift_hz_per_s=np.array([0.0]),
-        snr_db=snr_db,
-        rng=rng,
-        num_rx=1,
-        channel_model="unit_gain",
-        doppler_hz=0.0,
-    )
-    fast_symbols = fast_realization.clean_symbols[0]
-    ratio = waveform_symbols[0] / fast_symbols[0]
     validation["step4_receiver"] = {
-        "max_abs_symbol_error_waveform_vs_fast": float(
-            np.max(np.abs(waveform_symbols[0] - fast_symbols[0]))
-        ),
-        "mean_phase_deg_waveform_vs_fast": float(np.angle(np.mean(ratio), deg=True)),
-        "mean_magnitude_ratio_waveform_vs_fast": float(np.mean(np.abs(ratio))),
+        "mean_abs_extracted_symbol": float(np.mean(np.abs(waveform_symbols))),
+        "std_abs_extracted_symbol": float(np.std(np.abs(waveform_symbols))),
         "validated_true_toa_samples": float(waveform_realization.true_delay_samples),
         "validated_true_cfo_hz": validation_cfo,
     }
@@ -281,19 +240,12 @@ def run_validation_suite(
         search_grid=search_grid,
         return_surface=True,
     )
-    fft_waveform = fft_joint_search(
+    fft_result = fft_joint_search(
         params=params,
         hop_sequence=reference.hop_sequence,
         z_symbols=waveform_symbols,
         search_grid=search_grid,
         return_surface=True,
-    )
-    fft_fast = fft_joint_search(
-        params=params,
-        hop_sequence=reference.hop_sequence,
-        z_symbols=fast_symbols,
-        search_grid=search_grid,
-        return_surface=False,
     )
 
     validation["step5_direct_search"] = {
@@ -301,24 +253,17 @@ def run_validation_suite(
         "estimated_toa_samples": direct.toa_samples,
         "peak_statistic": direct.statistic,
     }
-    validation["step6_fft"] = compare_search_results(direct, fft_waveform)
+    validation["step6_fft"] = compare_search_results(direct, fft_result)
     validation["step6_fft"].update(
         {
-            "fft_estimated_cfo_hz": fft_waveform.cfo_hz,
-            "fft_estimated_toa_samples": fft_waveform.toa_samples,
-            "fast_fft_estimated_cfo_hz": fft_fast.cfo_hz,
-            "fast_fft_estimated_toa_samples": fft_fast.toa_samples,
-            "waveform_vs_fast_fft_cfo_hz_difference": float(abs(fft_waveform.cfo_hz - fft_fast.cfo_hz)),
-            "waveform_vs_fast_fft_toa_samples_difference": float(
-                abs(fft_waveform.toa_samples - fft_fast.toa_samples)
+            "fft_estimated_cfo_hz": fft_result.cfo_hz,
+            "fft_estimated_toa_samples": fft_result.toa_samples,
+            "toa_mapping_note": (
+                "The FFT q-index is mapped through the paper's signed Eq. (6) delay "
+                "formula and then wrapped into [0, Ncp) for physical-delay reporting."
             ),
         }
     )
-    validation["step6_fft"]["toa_mapping_note"] = (
-        "The FFT q-index is mapped through the paper's signed Eq. (6) delay "
-        "formula and then wrapped into [0, Ncp) for physical-delay reporting."
-    )
-
     return validation
 
 
@@ -328,19 +273,14 @@ def main() -> None:
     rng = make_rng(args.seed)
     thresholds = resolve_thresholds(args)
     run_config = build_run_configuration(
-        mode=args.mode,
         channel_model=args.channel_model,
         m1=args.m1,
         m2=args.m2,
         num_rx=args.num_rx,
     )
-    output_path = Path(args.output) if args.output is not None else result_path(
-        args.mode,
-        "detection_results.json",
-    )
+    output_path = Path(args.output) if args.output is not None else result_path("detection_results.json")
     output = {
         "result_kind": "detection",
-        "mode": args.mode,
         "channel_model": args.channel_model,
         "run_config": run_config,
         "cases": [],
@@ -361,7 +301,6 @@ def main() -> None:
             reference=references[0],
             front_end=front_end,
             rng=rng,
-            snr_db=case.snr_db,
         )
         threshold = thresholds[case.preamble_length]
         result = run_detection_experiment(
@@ -376,7 +315,6 @@ def main() -> None:
             num_rx=args.num_rx,
             channel_model=args.channel_model,
             doppler_hz=args.doppler_hz,
-            mode=args.mode,
             front_end=front_end,
             collect_errors=False,
         )
@@ -384,7 +322,6 @@ def main() -> None:
         record = {
             "L": case.preamble_length,
             "snr_db": case.snr_db,
-            "mode": args.mode,
             "channel_model": args.channel_model,
             "threshold": threshold,
             "validation": validation,
@@ -408,7 +345,6 @@ def main() -> None:
         print(f"  Step 6: {validation['step6_fft']}")
         print(
             f"[Detection] L={case.preamble_length:3d} "
-            f"mode={args.mode:8s} "
             f"SNR={case.snr_db:6.2f} dB "
             f"Pmd={result['misdetection_probability']:.6f} "
             f"Pd={result['detection_probability']:.6f}"

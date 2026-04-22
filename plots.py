@@ -1,4 +1,4 @@
-"""Generate plots from the saved NPRACH simulation results."""
+"""Generate plots from the saved waveform-domain NPRACH simulation results."""
 
 from __future__ import annotations
 
@@ -7,16 +7,12 @@ import json
 import os
 from pathlib import Path
 
-from config import (
-    DEFAULT_SIMULATION_MODE,
-    ensure_results_dir,
-    incompatible_run_configuration_keys,
-    result_path,
-)
+from config import ensure_results_dir, incompatible_run_configuration_keys, result_path
 
 os.environ.setdefault("MPLCONFIGDIR", str(ensure_results_dir() / ".matplotlib"))
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,42 +21,12 @@ import numpy as np
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--mode",
-        type=str,
-        default=DEFAULT_SIMULATION_MODE,
-        choices=("waveform", "fast"),
-    )
-    parser.add_argument(
-        "--false-alarm-json",
-        type=str,
-        default=None,
-    )
-    parser.add_argument(
-        "--detection-json",
-        type=str,
-        default=None,
-    )
-    parser.add_argument(
-        "--toa-npz",
-        type=str,
-        default=None,
-    )
-    parser.add_argument(
-        "--toa-summary-json",
-        type=str,
-        default=None,
-    )
-    parser.add_argument(
-        "--summary-output",
-        type=str,
-        default=None,
-    )
-    parser.add_argument(
-        "--toa-output",
-        type=str,
-        default=None,
-    )
+    parser.add_argument("--false-alarm-json", type=str, default=None)
+    parser.add_argument("--detection-json", type=str, default=None)
+    parser.add_argument("--toa-npz", type=str, default=None)
+    parser.add_argument("--toa-summary-json", type=str, default=None)
+    parser.add_argument("--summary-output", type=str, default=None)
+    parser.add_argument("--toa-output", type=str, default=None)
     parser.add_argument("--show", action="store_true")
     return parser.parse_args()
 
@@ -96,7 +62,6 @@ def require_run_configuration(metadata: dict, path: str | Path, expected_kind: s
 
 
 def validate_result_bundle(
-    mode: str,
     false_alarm_json: str | Path,
     detection_json: str | Path,
     toa_summary_json: str | Path,
@@ -132,12 +97,6 @@ def validate_result_bundle(
     ]
 
     reference_label, reference_path, reference_run_config = sources[0]
-    if reference_run_config.get("mode") != mode:
-        raise ValueError(
-            f"Requested `--mode {mode}` but {reference_label} metadata in {reference_path} "
-            f"reports mode `{reference_run_config.get('mode')}`."
-        )
-
     for label, path, run_config in sources[1:]:
         mismatched_keys = incompatible_run_configuration_keys(reference_run_config, run_config)
         if mismatched_keys:
@@ -213,33 +172,21 @@ def main() -> None:
     """Entry point for plotting."""
     args = parse_args()
     false_alarm_json = Path(args.false_alarm_json) if args.false_alarm_json else result_path(
-        args.mode,
-        "false_alarm_results.json",
+        "false_alarm_results.json"
     )
     detection_json = Path(args.detection_json) if args.detection_json else result_path(
-        args.mode,
-        "detection_results.json",
+        "detection_results.json"
     )
-    toa_npz = Path(args.toa_npz) if args.toa_npz else result_path(
-        args.mode,
-        "toa_cdf_results.npz",
-    )
+    toa_npz = Path(args.toa_npz) if args.toa_npz else result_path("toa_cdf_results.npz")
     toa_summary_json = (
-        Path(args.toa_summary_json)
-        if args.toa_summary_json
-        else result_path(args.mode, "toa_cdf_summary.json")
+        Path(args.toa_summary_json) if args.toa_summary_json else result_path("toa_cdf_summary.json")
     )
     summary_output = Path(args.summary_output) if args.summary_output else result_path(
-        args.mode,
-        "detection_false_alarm.png",
+        "detection_false_alarm.png"
     )
-    toa_output = Path(args.toa_output) if args.toa_output else result_path(
-        args.mode,
-        "toa_cdf.png",
-    )
+    toa_output = Path(args.toa_output) if args.toa_output else result_path("toa_cdf.png")
 
     validate_result_bundle(
-        mode=args.mode,
         false_alarm_json=false_alarm_json,
         detection_json=detection_json,
         toa_summary_json=toa_summary_json,

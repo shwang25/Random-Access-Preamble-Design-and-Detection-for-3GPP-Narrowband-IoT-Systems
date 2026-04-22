@@ -1,9 +1,7 @@
 {
   "result_kind": "detection",
-  "mode": "waveform",
   "channel_model": "typical_urban",
   "run_config": {
-    "mode": "waveform",
     "channel_model": "typical_urban",
     "m1": 128,
     "m2": 256,
@@ -13,7 +11,6 @@
     {
       "L": 8,
       "snr_db": 14.25,
-      "mode": "waveform",
       "channel_model": "typical_urban",
       "threshold": 15.335274146688624,
       "validation": {
@@ -55,9 +52,8 @@
           "tx_waveform_upsampled_samples": 24576
         },
         "step4_receiver": {
-          "max_abs_symbol_error_waveform_vs_fast": 0.01979854966286754,
-          "mean_phase_deg_waveform_vs_fast": 1.1287500821021146,
-          "mean_magnitude_ratio_waveform_vs_fast": 0.999668165655495,
+          "mean_abs_extracted_symbol": 0.9996564751239857,
+          "std_abs_extracted_symbol": 0.0007391368279348255,
           "validated_true_toa_samples": 11.25,
           "validated_true_cfo_hz": 10.0
         },
@@ -75,10 +71,6 @@
           "normalized_surface_max_error": 5.10702591327572e-15,
           "fft_estimated_cfo_hz": 0.0,
           "fft_estimated_toa_samples": 11.25,
-          "fast_fft_estimated_cfo_hz": 0.0,
-          "fast_fft_estimated_toa_samples": 11.25,
-          "waveform_vs_fast_fft_cfo_hz_difference": 0.0,
-          "waveform_vs_fast_fft_toa_samples_difference": 0.0,
           "toa_mapping_note": "The FFT q-index is mapped through the paper's signed Eq. (6) delay formula and then wrapped into [0, Ncp) for physical-delay reporting."
         }
       },
@@ -87,14 +79,13 @@
       "num_trials": 128,
       "num_detected": 128,
       "num_missed": 0,
-      "mean_statistic": 1531.353544036319,
-      "mean_abs_cfo_error_hz": 8.167042026284033,
-      "mean_abs_toa_error_us": 1.1393229166666665
+      "mean_statistic": 1440.844188727278,
+      "mean_abs_cfo_error_hz": 9.046245631962746,
+      "mean_abs_toa_error_us": 1.513671875
     },
     {
       "L": 32,
       "snr_db": 4.25,
-      "mode": "waveform",
       "channel_model": "typical_urban",
       "threshold": 316.6390622388404,
       "validation": {
@@ -160,9 +151,8 @@
           "tx_waveform_upsampled_samples": 98304
         },
         "step4_receiver": {
-          "max_abs_symbol_error_waveform_vs_fast": 0.020271974546946653,
-          "mean_phase_deg_waveform_vs_fast": 1.1287500643675146,
-          "mean_magnitude_ratio_waveform_vs_fast": 0.9994529889943161,
+          "mean_abs_extracted_symbol": 0.9994413009791714,
+          "std_abs_extracted_symbol": 0.0013214510997247154,
           "validated_true_toa_samples": 11.25,
           "validated_true_cfo_hz": 10.0
         },
@@ -180,26 +170,21 @@
           "normalized_surface_max_error": 4.3298697960381105e-15,
           "fft_estimated_cfo_hz": 0.0,
           "fft_estimated_toa_samples": 11.25,
-          "fast_fft_estimated_cfo_hz": 0.0,
-          "fast_fft_estimated_toa_samples": 11.25,
-          "waveform_vs_fast_fft_cfo_hz_difference": 0.0,
-          "waveform_vs_fast_fft_toa_samples_difference": 0.0,
           "toa_mapping_note": "The FFT q-index is mapped through the paper's signed Eq. (6) delay formula and then wrapped into [0, Ncp) for physical-delay reporting."
         }
       },
-      "misdetection_probability": 0.0,
-      "detection_probability": 1.0,
+      "misdetection_probability": 0.0078125,
+      "detection_probability": 0.9921875,
       "num_trials": 128,
-      "num_detected": 128,
-      "num_missed": 0,
-      "mean_statistic": 6430.464762811291,
-      "mean_abs_cfo_error_hz": 7.075294159814073,
-      "mean_abs_toa_error_us": 1.33056640625
+      "num_detected": 127,
+      "num_missed": 1,
+      "mean_statistic": 6925.681783441997,
+      "mean_abs_cfo_error_hz": 10.809277836532539,
+      "mean_abs_toa_error_us": 2.4007161458333335
     },
     {
       "L": 128,
       "snr_db": -5.75,
-      "mode": "waveform",
       "channel_model": "typical_urban",
       "threshold": 8362.67014241081,
       "validation": {
@@ -361,9 +346,8 @@
           "tx_waveform_upsampled_samples": 393216
         },
         "step4_receiver": {
-          "max_abs_symbol_error_waveform_vs_fast": 0.02027197454694755,
-          "mean_phase_deg_waveform_vs_fast": 1.1287500581114773,
-          "mean_magnitude_ratio_waveform_vs_fast": 0.9993588071124979,
+          "mean_abs_extracted_symbol": 0.9993471201987548,
+          "std_abs_extracted_symbol": 0.001473083655416253,
           "validated_true_toa_samples": 11.25,
           "validated_true_cfo_hz": 10.0
         },
@@ -381,21 +365,17 @@
           "normalized_surface_max_error": 4.218847493575595e-15,
           "fft_estimated_cfo_hz": 0.0,
           "fft_estimated_toa_samples": 11.25,
-          "fast_fft_estimated_cfo_hz": 0.0,
-          "fast_fft_estimated_toa_samples": 11.25,
-          "waveform_vs_fast_fft_cfo_hz_difference": 0.0,
-          "waveform_vs_fast_fft_toa_samples_difference": 0.0,
           "toa_mapping_note": "The FFT q-index is mapped through the paper's signed Eq. (6) delay formula and then wrapped into [0, Ncp) for physical-delay reporting."
         }
       },
-      "misdetection_probability": 0.0078125,
-      "detection_probability": 0.9921875,
+      "misdetection_probability": 0.015625,
+      "detection_probability": 0.984375,
       "num_trials": 128,
-      "num_detected": 127,
-      "num_missed": 1,
-      "mean_statistic": 28469.018839938974,
-      "mean_abs_cfo_error_hz": 10.699942135591256,
-      "mean_abs_toa_error_us": 2.604166666666667
+      "num_detected": 126,
+      "num_missed": 2,
+      "mean_statistic": 32860.29843917462,
+      "mean_abs_cfo_error_hz": 11.236984607526763,
+      "mean_abs_toa_error_us": 2.01416015625
     }
   ]
 }

@@ -1,6 +1,6 @@
 # Random Access Preamble Design and Detection for 3GPP Narrowband IoT Systems
 
-This repository provides a **reproduction and implementation study** of the paper:
+This repository provides a **waveform-domain reproduction and implementation study** of the paper:
 
 > **"Random Access Preamble Design and Detection for 3GPP Narrowband IoT Systems"**  
 > Xingqin Lin, Ansuman Adhikary, Y.-P. Eric Wang  
@@ -18,10 +18,7 @@ This project reproduces the main NPRACH simulation framework of the paper, inclu
 - Detection and false alarm evaluation  
 - ToA estimation error CDF under different coverage classes  
 
-Two simulation modes are included:
-
-- `waveform` for the paper-like waveform-domain link-level simulation  
-- `fast` for a lighter symbol-domain approximation  
+The implementation focuses on the waveform-domain paper-reference path.
 
 ---
 
@@ -31,7 +28,7 @@ Two simulation modes are included:
 ├── config.py                  # Simulation parameters
 ├── hopping.py                 # NPRACH hopping pattern
 ├── waveform.py                # Waveform generation
-├── channel.py                 # Channel modeling
+├── channel.py                 # Waveform-domain channel modeling
 ├── receiver.py                # Receiver processing
 ├── detector.py                # Detection logic
 ├── simulate_false_alarm.py    # False alarm simulation
@@ -52,31 +49,20 @@ pip install numpy scipy matplotlib
 
 ### Run
 
-Waveform mode:
-
 ```bash
-python simulate_false_alarm.py --mode waveform
-python simulate_detection.py --mode waveform
-python simulate_toa_cdf.py --mode waveform
-python plots.py --mode waveform
-```
-
-Fast mode:
-
-```bash
-python simulate_false_alarm.py --mode fast
-python simulate_detection.py --mode fast
-python simulate_toa_cdf.py --mode fast
-python plots.py --mode fast
+python simulate_false_alarm.py
+python simulate_detection.py
+python simulate_toa_cdf.py
+python plots.py
 ```
 
 ---
 
 ## Notes
 
-- `waveform` mode is the main paper-reference path and is closer to the link-level procedure described in the paper
-- `fast` mode is useful for efficient evaluation and benchmarking
-- Minor differences from the paper may remain due to explicit engineering approximations in implementation details not fully specified in the letter
+- This repository implements the waveform-domain paper-like simulation chain only
+- Minor differences from the paper may remain because some details not fully specified in the letter are handled with explicit engineering approximations
+- The code reproduces the core NPRACH mechanism and main performance trends, but does not claim exact hidden 3GPP or paper-internal simulator equivalence
 
 ---
 

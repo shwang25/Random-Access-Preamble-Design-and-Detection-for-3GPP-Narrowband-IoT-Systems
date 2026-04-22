@@ -11,7 +11,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parent
 RESULTS_DIR = ROOT / "results"
-RESULT_COMPATIBILITY_KEYS = ("mode", "channel_model", "m1", "m2", "num_rx")
+RESULT_COMPATIBILITY_KEYS = ("channel_model", "m1", "m2", "num_rx")
 
 DEFAULT_SEED = 20260422
 
@@ -34,9 +34,7 @@ TARGET_PFA = 1e-3
 
 DEFAULT_SEARCH_M1 = 128
 DEFAULT_SEARCH_M2 = 256
-DEFAULT_SIMULATION_MODE = "waveform"
 DEFAULT_PAPER_CHANNEL_MODEL = "typical_urban"
-DEFAULT_FAST_CHANNEL_MODEL = "block_fading"
 
 WAVEFORM_OVERSAMPLING_FACTOR = 8
 WAVEFORM_FILTER_TAPS = 65
@@ -116,20 +114,12 @@ def ensure_results_dir() -> Path:
     return RESULTS_DIR
 
 
-def ensure_mode_results_dir(mode: str) -> Path:
-    """Create and return the mode-specific results directory."""
-    path = ensure_results_dir() / mode
-    path.mkdir(parents=True, exist_ok=True)
-    return path
-
-
-def result_path(mode: str, filename: str) -> Path:
-    """Return the default output path for one simulation mode."""
-    return ensure_mode_results_dir(mode) / filename
+def result_path(filename: str) -> Path:
+    """Return the default output path inside the results directory."""
+    return ensure_results_dir() / filename
 
 
 def build_run_configuration(
-    mode: str,
     channel_model: str,
     m1: int,
     m2: int,
@@ -137,7 +127,6 @@ def build_run_configuration(
 ) -> dict:
     """Build the shared run-configuration metadata stored with result files."""
     return {
-        "mode": mode,
         "channel_model": channel_model,
         "m1": int(m1),
         "m2": int(m2),

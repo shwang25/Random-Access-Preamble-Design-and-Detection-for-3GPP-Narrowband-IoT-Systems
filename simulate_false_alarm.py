@@ -1,4 +1,4 @@
-"""Run the false alarm experiment and threshold calibration for the paper cases."""
+"""Run threshold calibration and false alarm evaluation for the paper cases."""
 
 from __future__ import annotations
 
@@ -11,11 +11,10 @@ from config import (
     DEFAULT_SEARCH_M1,
     DEFAULT_SEARCH_M2,
     DEFAULT_SEED,
-    DEFAULT_SIMULATION_MODE,
     PAPER_ITERATIONS_FALSE_ALARM,
     PAPER_NUM_RX,
-    build_search_grid,
     build_run_configuration,
+    build_search_grid,
     derive_parameters,
     make_rng,
     paper_coverage_cases,
@@ -35,13 +34,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--m2", type=int, default=DEFAULT_SEARCH_M2)
     parser.add_argument("--num-rx", type=int, default=PAPER_NUM_RX)
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
-    parser.add_argument("--mode", type=str, default=DEFAULT_SIMULATION_MODE, choices=("waveform", "fast"))
     parser.add_argument("--channel-model", type=str, default=DEFAULT_PAPER_CHANNEL_MODEL)
-    parser.add_argument(
-        "--output",
-        type=str,
-        default=None,
-    )
+    parser.add_argument("--output", type=str, default=None)
     return parser.parse_args()
 
 
@@ -50,19 +44,14 @@ def main() -> None:
     args = parse_args()
     rng = make_rng(args.seed)
     run_config = build_run_configuration(
-        mode=args.mode,
         channel_model=args.channel_model,
         m1=args.m1,
         m2=args.m2,
         num_rx=args.num_rx,
     )
-    output_path = Path(args.output) if args.output is not None else result_path(
-        args.mode,
-        "false_alarm_results.json",
-    )
+    output_path = Path(args.output) if args.output is not None else result_path("false_alarm_results.json")
     output = {
         "result_kind": "false_alarm",
-        "mode": args.mode,
         "channel_model": args.channel_model,
         "run_config": run_config,
         "cases": [],
@@ -87,14 +76,12 @@ def main() -> None:
             evaluation_trials=args.evaluation_iterations,
             batch_size=args.batch_size,
             num_rx=args.num_rx,
-            mode=args.mode,
             front_end=front_end,
         )
 
         record = {
             "L": case.preamble_length,
             "snr_db": case.snr_db,
-            "mode": args.mode,
             "channel_model": args.channel_model,
             "threshold": result["threshold"],
             "achieved_pfa": result["achieved_pfa"],
@@ -112,7 +99,6 @@ def main() -> None:
 
         print(
             f"[False alarm] L={case.preamble_length:3d} "
-            f"mode={args.mode:8s} "
             f"SNR={case.snr_db:6.2f} dB "
             f"threshold={result['threshold']:.4f} "
             f"cal_Pfa={result['calibration_pfa']:.6f} "

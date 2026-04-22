@@ -20,11 +20,13 @@ from config import (
     PAPER_ITERATIONS_FALSE_ALARM,
     PAPER_NUM_RX,
     build_search_grid,
+    build_run_configuration,
     derive_parameters,
-    ensure_results_dir,
     make_rng,
     paper_coverage_cases,
     parameter_summary,
+    result_path,
+    run_configuration_matches,
 )
 from detector import run_detection_experiment, run_false_alarm_experiment
 from hopping import example_sequence_string, validate_hopping_sequence
@@ -62,12 +64,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--threshold-json",
         type=str,
-        default=str(ensure_results_dir() / "false_alarm_results.json"),
+        default=None,
     )
     parser.add_argument(
         "--output",
         type=str,
-        default=str(ensure_results_dir() / "detection_results.json"),
+        default=None,
     )
     return parser.parse_args()
 
@@ -89,7 +91,17 @@ def threshold_file_is_usable(path: Path, args: argparse.Namespace) -> bool:
     with open(path, "r", encoding="utf-8") as handle:
         data = json.load(handle)
 
-    if data.get("mode") != args.mode:
+    if data.get("result_kind") != "false_alarm":
+        return False
+
+    expected_run_config = build_run_configuration(
+        mode=args.mode,
+        channel_model=args.channel_model,
+        m1=args.m1,
+        m2=args.m2,
+        num_rx=args.num_rx,
+    )
+    if not run_configuration_matches(data, expected_run_config):
         return False
 
     for entry in data.get("cases", []):
@@ -106,7 +118,11 @@ def resolve_thresholds(args: argparse.Namespace) -> dict[int, float]:
     """
     Load thresholds from disk, or calibrate them if the file is absent or stale.
     """
-    threshold_path = Path(args.threshold_json)
+    threshold_path = (
+        Path(args.threshold_json)
+        if args.threshold_json is not None
+        else result_path(args.mode, "false_alarm_results.json")
+    )
     if threshold_file_is_usable(threshold_path, args):
         return load_thresholds(threshold_path)
 
@@ -115,7 +131,20 @@ def resolve_thresholds(args: argparse.Namespace) -> dict[int, float]:
         "calibrating thresholds first."
     )
     threshold_rng = make_rng(args.seed + 1)
-    output = {"mode": args.mode, "channel_model": args.channel_model, "cases": []}
+    run_config = build_run_configuration(
+        mode=args.mode,
+        channel_model=args.channel_model,
+        m1=args.m1,
+        m2=args.m2,
+        num_rx=args.num_rx,
+    )
+    output = {
+        "result_kind": "false_alarm",
+        "mode": args.mode,
+        "channel_model": args.channel_model,
+        "run_config": run_config,
+        "cases": [],
+    }
     thresholds = {}
 
     for case in paper_coverage_cases():
@@ -161,7 +190,7 @@ def resolve_thresholds(args: argparse.Namespace) -> dict[int, float]:
             }
         )
 
-    threshold_path.parent.mkdir(exist_ok=True)
+    threshold_path.parent.mkdir(parents=True, exist_ok=True)
     with open(threshold_path, "w", encoding="utf-8") as handle:
         json.dump(output, handle, indent=2)
     print(f"Saved calibrated thresholds to {threshold_path}")
@@ -298,7 +327,24 @@ def main() -> None:
     args = parse_args()
     rng = make_rng(args.seed)
     thresholds = resolve_thresholds(args)
-    output = {"mode": args.mode, "channel_model": args.channel_model, "cases": []}
+    run_config = build_run_configuration(
+        mode=args.mode,
+        channel_model=args.channel_model,
+        m1=args.m1,
+        m2=args.m2,
+        num_rx=args.num_rx,
+    )
+    output_path = Path(args.output) if args.output is not None else result_path(
+        args.mode,
+        "detection_results.json",
+    )
+    output = {
+        "result_kind": "detection",
+        "mode": args.mode,
+        "channel_model": args.channel_model,
+        "run_config": run_config,
+        "cases": [],
+    }
 
     for case in paper_coverage_cases():
         params = derive_parameters(case.preamble_length)
@@ -368,9 +414,10 @@ def main() -> None:
             f"Pd={result['detection_probability']:.6f}"
         )
 
-    with open(args.output, "w", encoding="utf-8") as handle:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as handle:
         json.dump(output, handle, indent=2)
-    print(f"Saved detection results to {args.output}")
+    print(f"Saved detection results to {output_path}")
 
 
 if __name__ == "__main__":

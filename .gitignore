@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+
+results/.matplotlib/
+results/archive/
+
+.DS_Store
+Thumbs.db

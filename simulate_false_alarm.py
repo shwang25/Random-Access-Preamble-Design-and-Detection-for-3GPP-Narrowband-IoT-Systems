@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from pathlib import Path
 
 from config import (
     DEFAULT_PAPER_CHANNEL_MODEL,
@@ -14,10 +15,11 @@ from config import (
     PAPER_ITERATIONS_FALSE_ALARM,
     PAPER_NUM_RX,
     build_search_grid,
+    build_run_configuration,
     derive_parameters,
-    ensure_results_dir,
     make_rng,
     paper_coverage_cases,
+    result_path,
 )
 from detector import run_false_alarm_experiment
 from waveform import build_preamble_reference_bank, design_front_end_filter
@@ -38,7 +40,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output",
         type=str,
-        default=str(ensure_results_dir() / "false_alarm_results.json"),
+        default=None,
     )
     return parser.parse_args()
 
@@ -47,7 +49,24 @@ def main() -> None:
     """Entry point for the false alarm simulation."""
     args = parse_args()
     rng = make_rng(args.seed)
-    output = {"mode": args.mode, "channel_model": args.channel_model, "cases": []}
+    run_config = build_run_configuration(
+        mode=args.mode,
+        channel_model=args.channel_model,
+        m1=args.m1,
+        m2=args.m2,
+        num_rx=args.num_rx,
+    )
+    output_path = Path(args.output) if args.output is not None else result_path(
+        args.mode,
+        "false_alarm_results.json",
+    )
+    output = {
+        "result_kind": "false_alarm",
+        "mode": args.mode,
+        "channel_model": args.channel_model,
+        "run_config": run_config,
+        "cases": [],
+    }
 
     for case in paper_coverage_cases():
         params = derive_parameters(case.preamble_length)
@@ -100,9 +119,10 @@ def main() -> None:
             f"eval_Pfa={result['achieved_pfa']:.6f}"
         )
 
-    with open(args.output, "w", encoding="utf-8") as handle:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as handle:
         json.dump(output, handle, indent=2)
-    print(f"Saved false alarm results to {args.output}")
+    print(f"Saved false alarm results to {output_path}")
 
 
 if __name__ == "__main__":

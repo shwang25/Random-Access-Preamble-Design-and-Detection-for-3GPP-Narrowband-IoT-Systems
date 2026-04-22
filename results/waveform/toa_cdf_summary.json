@@ -1,0 +1,47 @@
+{
+  "result_kind": "toa_cdf_summary",
+  "mode": "waveform",
+  "channel_model": "typical_urban",
+  "run_config": {
+    "mode": "waveform",
+    "channel_model": "typical_urban",
+    "m1": 128,
+    "m2": 256,
+    "num_rx": 2
+  },
+  "cases": [
+    {
+      "L": 8,
+      "snr_db": 14.25,
+      "mode": "waveform",
+      "channel_model": "typical_urban",
+      "num_detected": 128,
+      "median_abs_error_us": 1.0416666666666667,
+      "p90_abs_error_us": 2.6041666666666665,
+      "p99_abs_error_us": 4.6875,
+      "fraction_within_3us": 0.921875
+    },
+    {
+      "L": 32,
+      "snr_db": 4.25,
+      "mode": "waveform",
+      "channel_model": "typical_urban",
+      "num_detected": 128,
+      "median_abs_error_us": 1.0416666666666667,
+      "p90_abs_error_us": 2.0833333333333335,
+      "p99_abs_error_us": 2.984375000000002,
+      "fraction_within_3us": 0.984375
+    },
+    {
+      "L": 128,
+      "snr_db": -5.75,
+      "mode": "waveform",
+      "channel_model": "typical_urban",
+      "num_detected": 121,
+      "median_abs_error_us": 1.0416666666666667,
+      "p90_abs_error_us": 3.125,
+      "p99_abs_error_us": 46.77083333333333,
+      "fraction_within_3us": 0.8760330578512396
+    }
+  ]
+}

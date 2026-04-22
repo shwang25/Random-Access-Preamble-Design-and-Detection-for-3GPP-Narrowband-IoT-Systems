@@ -1,0 +1,65 @@
+{
+  "result_kind": "false_alarm",
+  "mode": "waveform",
+  "channel_model": "typical_urban",
+  "run_config": {
+    "mode": "waveform",
+    "channel_model": "typical_urban",
+    "m1": 128,
+    "m2": 256,
+    "num_rx": 2
+  },
+  "cases": [
+    {
+      "L": 8,
+      "snr_db": 14.25,
+      "mode": "waveform",
+      "channel_model": "typical_urban",
+      "threshold": 15.335274146688624,
+      "achieved_pfa": 0.00390625,
+      "target_pfa": 0.001,
+      "calibration_trials": 1024,
+      "evaluation_trials": 1024,
+      "calibration_statistics_mean": 9.191957240890071,
+      "calibration_statistics_std": 1.5882491288832958,
+      "evaluation_statistics_mean": 9.170753256826668,
+      "evaluation_statistics_std": 1.5726617707948467,
+      "calibration_pfa": 0.0009765625,
+      "evaluation_false_alarm_count": 4
+    },
+    {
+      "L": 32,
+      "snr_db": 4.25,
+      "mode": "waveform",
+      "channel_model": "typical_urban",
+      "threshold": 316.6390622388404,
+      "achieved_pfa": 0.0,
+      "target_pfa": 0.001,
+      "calibration_trials": 1024,
+      "evaluation_trials": 1024,
+      "calibration_statistics_mean": 235.03073043777533,
+      "calibration_statistics_std": 23.247536238651794,
+      "evaluation_statistics_mean": 234.67517613682082,
+      "evaluation_statistics_std": 22.7131045570784,
+      "calibration_pfa": 0.0009765625,
+      "evaluation_false_alarm_count": 0
+    },
+    {
+      "L": 128,
+      "snr_db": -5.75,
+      "mode": "waveform",
+      "channel_model": "typical_urban",
+      "threshold": 8362.67014241081,
+      "achieved_pfa": 0.0029296875,
+      "target_pfa": 0.001,
+      "calibration_trials": 1024,
+      "evaluation_trials": 1024,
+      "calibration_statistics_mean": 6918.6784684154445,
+      "calibration_statistics_std": 374.24305931782027,
+      "evaluation_statistics_mean": 6910.720568275374,
+      "evaluation_statistics_std": 394.4881558758946,
+      "calibration_pfa": 0.0009765625,
+      "evaluation_false_alarm_count": 3
+    }
+  ]
+}

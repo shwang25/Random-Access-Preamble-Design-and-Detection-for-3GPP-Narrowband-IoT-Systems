@@ -115,7 +115,10 @@ The paper does not fully specify several implementation details that a runnable 
 
 ## Running the Experiments
 
-The scripts create `results/` automatically.
+The scripts create mode-specific result bundles automatically under:
+
+- `results/waveform/`
+- `results/fast/`
 
 ### Paper-reference waveform mode
 
@@ -158,7 +161,7 @@ The same threshold calibration and wrapped-delay ToA error logic are then reused
 
 ## Output Files
 
-After running the scripts, the following files are produced under `results/`:
+After running one mode, the following files are produced under `results/<mode>/`:
 
 - `false_alarm_results.json`
 - `detection_results.json`
@@ -167,8 +170,15 @@ After running the scripts, the following files are produced under `results/`:
 - `detection_false_alarm.png`
 - `toa_cdf.png`
 
+The JSON / NPZ metadata record the actual run configuration and trial counts for
+that bundle. The scripts default to paper-scale counts, but any generated bundle
+should be interpreted using the counts stored in its own metadata rather than by
+assuming the defaults were used.
+
 ## Reproducibility Notes
 
 - All random draws use explicit NumPy generator seeds.
 - Threshold calibration and false alarm evaluation use independent noise-only data sets.
+- Threshold files now include run-configuration metadata and are only reused when `mode`, `channel_model`, `m1`, `m2`, and `num_rx` match.
+- `plots.py` validates that the detection, false alarm, and ToA files come from one compatible mode-specific result bundle before generating figures.
 - The waveform and fast modes share the same estimator and the same ToA wrapping logic, so their differences are concentrated in the front-end and channel modeling rather than in the detector core.

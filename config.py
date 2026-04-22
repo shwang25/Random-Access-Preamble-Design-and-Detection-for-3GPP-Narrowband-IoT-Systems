@@ -11,6 +11,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parent
 RESULTS_DIR = ROOT / "results"
+RESULT_COMPATIBILITY_KEYS = ("mode", "channel_model", "m1", "m2", "num_rx")
 
 DEFAULT_SEED = 20260422
 
@@ -113,6 +114,60 @@ def ensure_results_dir() -> Path:
     """Create the results directory if it does not exist."""
     RESULTS_DIR.mkdir(exist_ok=True)
     return RESULTS_DIR
+
+
+def ensure_mode_results_dir(mode: str) -> Path:
+    """Create and return the mode-specific results directory."""
+    path = ensure_results_dir() / mode
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def result_path(mode: str, filename: str) -> Path:
+    """Return the default output path for one simulation mode."""
+    return ensure_mode_results_dir(mode) / filename
+
+
+def build_run_configuration(
+    mode: str,
+    channel_model: str,
+    m1: int,
+    m2: int,
+    num_rx: int,
+) -> dict:
+    """Build the shared run-configuration metadata stored with result files."""
+    return {
+        "mode": mode,
+        "channel_model": channel_model,
+        "m1": int(m1),
+        "m2": int(m2),
+        "num_rx": int(num_rx),
+    }
+
+
+def run_configuration_matches(
+    metadata: dict,
+    expected_run_configuration: dict,
+    required_keys: tuple[str, ...] = RESULT_COMPATIBILITY_KEYS,
+) -> bool:
+    """Return whether a metadata blob matches the expected run configuration."""
+    run_configuration = metadata.get("run_config")
+    if not isinstance(run_configuration, dict):
+        return False
+    return all(run_configuration.get(key) == expected_run_configuration.get(key) for key in required_keys)
+
+
+def incompatible_run_configuration_keys(
+    reference_run_configuration: dict,
+    candidate_run_configuration: dict,
+    required_keys: tuple[str, ...] = RESULT_COMPATIBILITY_KEYS,
+) -> list[str]:
+    """Return the required run-configuration keys that do not match."""
+    return [
+        key
+        for key in required_keys
+        if reference_run_configuration.get(key) != candidate_run_configuration.get(key)
+    ]
 
 
 def make_rng(seed: int = DEFAULT_SEED) -> np.random.Generator:

@@ -1,0 +1,39 @@
+{
+  "mode": "waveform",
+  "channel_model": "typical_urban",
+  "cases": [
+    {
+      "L": 8,
+      "snr_db": 14.25,
+      "mode": "waveform",
+      "channel_model": "typical_urban",
+      "num_detected": 8,
+      "median_abs_error_us": 1.3020833333333335,
+      "p90_abs_error_us": 3.5937499999999996,
+      "p99_abs_error_us": 4.578125,
+      "fraction_within_3us": 0.75
+    },
+    {
+      "L": 32,
+      "snr_db": 4.25,
+      "mode": "waveform",
+      "channel_model": "typical_urban",
+      "num_detected": 8,
+      "median_abs_error_us": 1.0416666666666667,
+      "p90_abs_error_us": 1.5625,
+      "p99_abs_error_us": 1.5625,
+      "fraction_within_3us": 1.0
+    },
+    {
+      "L": 128,
+      "snr_db": -5.75,
+      "mode": "waveform",
+      "channel_model": "typical_urban",
+      "num_detected": 8,
+      "median_abs_error_us": 1.8229166666666667,
+      "p90_abs_error_us": 13.958333333333325,
+      "p99_abs_error_us": 38.89583333333332,
+      "fraction_within_3us": 0.875
+    }
+  ]
+}
